@@ -1,0 +1,86 @@
+# BTC Options Volatility Prediction Config
+
+# Data settings
+data:
+  # Deribit API (免费，无需key)
+  deribit_base_url: "https://www.deribit.com/api/v2"
+
+  # 备用数据源
+  coinglass_base_url: "https://open-api.coinglass.com/public/v2"
+
+  # 本地数据路径
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+
+  # 数据频率
+  price_interval: "1h"  # 价格数据: 1h, 4h, 1d
+  iv_interval: "1h"     # IV数据间隔
+
+  # 历史数据范围
+  lookback_days: 365
+
+# Feature settings
+features:
+  # 布林带
+  bb_window: 20
+  bb_std: 2
+
+  # 波动率计算
+  rv_windows: [7, 14, 30, 60]  # 已实现波动率窗口
+
+  # IV特征
+  iv_quantile_window: 90  # IV分位数计算窗口
+
+  # Skew
+  skew_delta: 0.25  # 25D skew
+
+# Model settings
+model:
+  # 预测目标
+  target: "dvol_change_7d"  # 预测7天后DVOL变化
+
+  # 训练参数
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+  # LSTM参数
+  lstm:
+    units: [64, 32]
+    dropout: 0.2
+    lookback: 30
+    batch_size: 32
+    epochs: 100
+    early_stopping_patience: 10
+
+  # LightGBM参数
+  lgbm:
+    n_estimators: 500
+    learning_rate: 0.05
+    max_depth: 6
+    num_leaves: 31
+
+# Signal settings
+signals:
+  # DVOL变化阈值
+  buy_threshold: 0.05   # 预测涨>5% → 买波动率
+  sell_threshold: -0.03 # 预测跌>3% → 卖波动率
+
+  # 信号确认
+  min_confidence: 0.6   # 最小置信度
+
+# Backtest settings
+backtest:
+  initial_capital: 100000  # USDT
+  position_size: 0.1       # 每次用10%资金
+  commission: 0.0003       # 手续费 0.03%
+  slippage: 0.001          # 滑点 0.1%
+
+  # 风控
+  max_drawdown: 0.15       # 最大回撤15%止损
+  max_position: 0.3        # 最大仓位30%
+
+# Logging
+logging:
+  level: "INFO"
+  log_file: "logs/trading.log"
